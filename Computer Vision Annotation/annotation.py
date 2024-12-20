@@ -1,7 +1,5 @@
 """ESP Custom window code to annotate the output of Computer Vision models."""
 
-# TODO: check " vs ' quotes for metadata after fix Sean. Then, fix bottom part of this file
-
 import cv2
 
 # Import ESP specific packages, when available. This allows to test the Python code outside of ESP
@@ -523,8 +521,8 @@ _espconfig_ = {
         ],
     },
 }
-# fmt: off
-'''metadata start
+"""metadata start
+
 {
     "name": "Computer Vision Annotation",
     "description": "Annotate the results of an object detection and/or a keypoint detection model.",
@@ -534,5 +532,5 @@ _espconfig_ = {
     ],
     "versionNotes": "Initial version"
 }
-metadata end'''
-# fmt: on
+metadata end
+"""
