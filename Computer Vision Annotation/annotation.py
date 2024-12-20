@@ -132,7 +132,7 @@ def create(data, _):
     image = annotate(data, image)
 
     if SETTINGS["output_image_encoding"] == "wide":
-        image = esp_utils.image_conversion.opencv_image_to_sas_wide_image(data["image"])
+        image = esp_utils.image_conversion.opencv_image_to_sas_wide_image(image)
     elif SETTINGS["output_image_encoding"] == "png":
         image = esp_utils.image_conversion.opencv_image_to_blob_image(
             image, type=".png"
