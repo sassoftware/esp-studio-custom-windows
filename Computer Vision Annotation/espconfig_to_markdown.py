@@ -19,12 +19,14 @@ def create_markdown_table(df):
         columns={
             "name": "Name",
             "desc": "Description",
-            "optional": "Optional",
+            "optional": "Required or Optional",
             "default": "Default",
         }
     )
-    if "Optional" in df.columns:
-        df["Optional"] = df["Optional"].apply(lambda x: "Yes" if x else "")
+    if "Required or Optional" in df.columns:
+        df["Required or Optional"] = df["Required or Optional"].apply(
+            lambda x: "Optional" if x else "Required"
+        )
     markdown_table = df.to_markdown(index=False)
     return markdown_table
 
@@ -34,11 +36,11 @@ def main():
     Populate the Usage section of the README.md file
     """
     usage = "<!--start_of_usage-->\n"
-    usage += "### Input variables\n"
+    usage += "### Input Variables\n"
     usage += espconfig["inputVariables"]["desc"] + "\n\n"
     usage += create_markdown_table(pd.DataFrame(espconfig["inputVariables"]["fields"]))
 
-    usage += "\n\n### Output variables\n"
+    usage += "\n\n### Output Variables\n"
     usage += espconfig["outputVariables"]["desc"] + "\n\n"
     usage += create_markdown_table(pd.DataFrame(espconfig["outputVariables"]["fields"]))
 

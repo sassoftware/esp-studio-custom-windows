@@ -13,7 +13,7 @@ Upload the `annotation.py` configuration file to SAS Event Stream Processing Stu
 
 <!--start_of_usage-->
 ### Input Variables
-Field related to image and object detection are required. Fields related to keypoints are optional. Object ID (for object tracking) and attributes are also optional.
+Fields related to image and object detection are required. Fields related to keypoints are optional. Object ID (for object tracking) and attributes are also optional.
 
 | Name                       | Description                                                                 | Required or Optional   |
 |:---------------------------|:----------------------------------------------------------------------------|:-----------------------|
@@ -43,12 +43,12 @@ Add an output field, of type `blob`, to store the annotated image. If you use th
 ### Initialization
 Set the options for the custom window. Note that either `png` or `jpg` is needed as the value for `output_image_encoding` to display images in Grafana.
 
-| Name                   | Description                                                           | Default   |
-|:-----------------------|:----------------------------------------------------------------------|:----------|
-| input_image_encoding   | Input image encoding - must be one of the following: wide, jpg, png   | wide      |
-| output_image_encoding  | Output image encoding - must be one of the following: wide, jpg, png  | jpg       |
-| object_label_separator | Object label separator                                                | ,         |
-| kpts_labels            | Keypoint labels                                                       |           |
+| Name                   | Description                                                          | Default   |
+|:-----------------------|:---------------------------------------------------------------------|:----------|
+| input_image_encoding   | Input image encoding - must be one of the following: wide, jpg, png  | wide      |
+| output_image_encoding  | Output image encoding - must be one of the following: wide, jpg, png | jpg       |
+| object_label_separator | Object label separator                                               | ,         |
+| kpts_labels            | Keypoint labels                                                      |           |
 
 <!--end_of_usage-->
 

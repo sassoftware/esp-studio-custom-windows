@@ -411,7 +411,7 @@ _espconfig_ = {
         "encode_binary": False,
     },
     "inputVariables": {
-        "desc": "Image and object detection related fields are required, keypoints are optional. Object ID (for object tracking) and attributes are also optional.",
+        "desc": "Fields related to image and object detection are required. Fields related to keypoints are optional. Object ID (for object tracking) and attributes are also optional.",
         "fields": [
             {
                 "name": "image",
@@ -425,12 +425,12 @@ _espconfig_ = {
             },
             {
                 "name": "x",
-                "desc": "Top-left X-coordinates of the bounding boxes (array(dbl))",
+                "desc": "Top left X-coordinates of the bounding boxes (array(dbl))",
                 "optional": False,
             },
             {
                 "name": "y",
-                "desc": "Top-left Y-coordinates of the bounding boxes  (array(dbl))",
+                "desc": "Top left Y-coordinates of the bounding boxes  (array(dbl))",
                 "optional": False,
             },
             {
@@ -450,7 +450,7 @@ _espconfig_ = {
             },
             {
                 "name": "object_id",
-                "desc": "Tracked object ID, e.g., from the Object Tracker window (array(i32))",
+                "desc": "Tracked object ID, for example from the Object Tracker window (array(i32))",
                 "optional": True,
             },
             {
@@ -491,20 +491,20 @@ _espconfig_ = {
         ],
     },
     "outputVariables": {
-        "desc": "Add a blob output field to store the annotated image. If you use the same image as used in the input variables, the original image will be overwritten with an annotated image.",
+        "desc": "Add an output field, of type `blob`, to store the annotated image. If you use the same image as used in the input variables, the original image is overwritten with an annotated image.",
         "fields": [{"name": "annotated_image", "desc": "Annotated image (blob)"}],
     },
     "initialization": {
-        "desc": "Set the options for the custom window. Note that either png or jpg is needed as output_image_encoding to display images in Grafana.",
+        "desc": "Set the options for the custom window. Note that either `png` or `jpg` is needed as the value for `output_image_encoding` to display images in Grafana.",
         "fields": [
             {
                 "name": "input_image_encoding",
-                "desc": "Input image encoding - must be either: wide, jpg, png (default: wide)",
+                "desc": "Input image encoding - must be one of the following: wide, jpg, png",
                 "default": "wide",
             },
             {
                 "name": "output_image_encoding",
-                "desc": "Output image encoding - must be either: wide, jpg, png (default: jpg)",
+                "desc": "Output image encoding - must be one of the following: wide, jpg, png",
                 "default": "jpg",
             },
             {
