@@ -15,40 +15,40 @@ Upload the `annotation.py` configuration file to SAS Event Stream Processing Stu
 ### Input Variables
 Fields related to image and object detection are required. Fields related to keypoints are optional. Object ID (for object tracking) and attributes are also optional.
 
-| Name                       | Description                                                              |Type          | Required or Optional   |
-|:---------------------------|:-------------------------------------------------------------------------|:-----------  |:-----------------------|
-| `image`                     | Input image                                                             |`blob`        | Required               |
-| `label`                      | Delimited list containing the class of the detected objects            |`string`      | Required               |
-| `x`                          | Top left X-coordinates of the bounding boxes                           |`array(dbl)`  | Required               |
-| `y`                          | Top left Y-coordinates of the bounding boxes                           |`array(dbl)`  | Required               |
-| `w`                          | Widths of the bounding boxes                                           |`array(dbl)`  | Required               |
-| `h`                          | Heights of the bounding boxes                                          |`array(dbl)`  | Required               |
-| `score`                      | Confidence scores array                                                |`array(dbl)`  | Required               |
-| `object_id`                  | Tracked object ID, for example from the Object Tracker window          |`array(i32)`  | Optional               |
-| `attribute`                  | Delimited list containing the attributes of the detected objects       |`string`      | Optional               |
-| `object_track_count`         | Number of tracks per detected object                                   |`array(i32)`  | Optional               |
-| `object_track_kpts_count`    | Number of keypoints per detected object for the track                  |`array(i32)`  | Optional               |
-| `object_track_kpts_x`        | X-coordinates for the keypoints track                                  |`array(dbl)`  | Optional               |
-| `object_track_kpts_y`        | Y-coordinates for the keypoints track                                  |`array(dbl)`  | Optional               |
-| `object_track_kpts_score`    | Confidence scores for the keypoints track                              |`array(dbl)`  | Optional               |
-| `object_track_kpts_label_id` | Label IDs for the keypoints track                                      |`array(i32)`  | Optional               |
+| Name                         | Description                                                        | Type         | Required or Optional   |
+|:-----------------------------|:-------------------------------------------------------------------|:-------------|:-----------------------|
+| `image`                      | Input image                                                        | `blob`       | Required               |
+| `label`                      | Delimited list containing the class of the detected objects        | `string`     | Required               |
+| `x`                          | Top left X-coordinates of the bounding boxes                       | `array(dbl)` | Required               |
+| `y`                          | Top left Y-coordinates of the bounding boxes                       | `array(dbl)` | Required               |
+| `w`                          | Widths of the bounding boxes                                       | `array(dbl)` | Required               |
+| `h`                          | Heights of the bounding boxes                                      | `array(dbl)` | Required               |
+| `score`                      | Confidence scores array                                            | `array(dbl)` | Required               |
+| `object_id`                  | Tracked object ID, for example from the Object Tracker window      | `array(i32)` | Optional               |
+| `attribute`                  | Delimited list containing the attribute(s) of the detected objects | `string`     | Optional               |
+| `object_track_count`         | Number of tracks per detected object                               | `array(i32)` | Optional               |
+| `object_track_kpts_count`    | Number of keypoints per detected object for the track              | `array(i32)` | Optional               |
+| `object_track_kpts_x`        | X-coordinates for the keypoints track                              | `array(dbl)` | Optional               |
+| `object_track_kpts_y`        | Y-coordinates for the keypoints track                              | `array(dbl)` | Optional               |
+| `object_track_kpts_score`    | Confidence scores for the keypoints track                          | `array(dbl)` | Optional               |
+| `object_track_kpts_label_id` | Label IDs for the keypoints track                                  | `array(i32)` | Optional               |
 
 ### Output Variables
 Add an output field, of type `blob`, to store the annotated image. If you use the same image as used in the input variables, the original image is overwritten with an annotated image.
 
-| Name            | Description            | Type   |
-|:----------------|:-----------------------|:-------|
-| `annotated_image` | Annotated image      |`blob`  |
+| Name              | Description     | Type   |
+|:------------------|:----------------|:-------|
+| `annotated_image` | Annotated image | `blob` |
 
 ### Initialization
 Set the options for the custom window. Note that either `png` or `jpg` is needed as the value for `output_image_encoding` to display images in Grafana.
 
-| Name                   | Description                                                          | Default   |
-|:-----------------------|:---------------------------------------------------------------------|:----------|
-| `input_image_encoding`   | Input image encoding - must be one of the following: `wide`, `jpg`, `png`  | `wide`      |
-| `output_image_encoding`  | Output image encoding - must be one of the following: `wide`, `jpg`, `png` | `jpg`       |
-| `object_label_separator` | Object label separator                                               | `,`         |
-| `kpts_labels`            | Keypoint labels                                                      |           |
+| Name                     | Description                                                                | Default   |
+|:-------------------------|:---------------------------------------------------------------------------|:----------|
+| `input_image_encoding`   | Input image encoding - must be one of the following: `wide`, `jpg`, `png`  | `wide`    |
+| `output_image_encoding`  | Output image encoding - must be one of the following: `wide`, `jpg`, `png` | `jpg`     |
+| `object_label_separator` | Object label separator                                                     | `,`       |
+| `kpts_labels`            | Keypoint labels                                                            | ``        |
 
 <!--end_of_usage-->
 

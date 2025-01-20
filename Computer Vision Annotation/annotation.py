@@ -499,12 +499,12 @@ _espconfig_ = {
         "fields": [
             {
                 "name": "input_image_encoding",
-                "desc": "Input image encoding - must be one of the following: wide, jpg, png",
+                "desc": "Input image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "wide",
             },
             {
                 "name": "output_image_encoding",
-                "desc": "Output image encoding - must be one of the following: wide, jpg, png",
+                "desc": "Output image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "jpg",
             },
             {

@@ -23,10 +23,32 @@ def create_markdown_table(df):
             "default": "Default",
         }
     )
+
+    df["Name"] = "`" + df["Name"] + "`"
+
+    if "Default" not in df.columns:
+        df["Type"] = "`" + df["Description"].str.extract(r"\(([\d\w\(\)]*)\)$") + "`"
+        df["Description"] = df["Description"].str.replace(
+            r"\([\d\w\(\)]*\)$", "", regex=True
+        )
+
+    if "Default" in df.columns:
+        df["Default"] = "`" + df["Default"] + "`"
+
     if "Required or Optional" in df.columns:
         df["Required or Optional"] = df["Required or Optional"].apply(
             lambda x: "Optional" if x else "Required"
         )
+
+    # Ordering
+    if "Default" not in df.columns:
+        if "Required or Optional" in df.columns:
+            df = df[["Name", "Description", "Type", "Required or Optional"]]
+        else:
+            df = df[["Name", "Description", "Type"]]
+    else:
+        df = df[["Name", "Description", "Default"]]
+
     markdown_table = df.to_markdown(index=False)
     return markdown_table
 
