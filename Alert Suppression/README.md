@@ -57,8 +57,8 @@ The main purpose of the Alert Suppression custom window is to add a calculated f
 | Name            | Description            |
 |:----------------|:-----------------------|
 | `alert_id` | Propagated from input |
-| `annotated_image` | Propagated from input |
-| `annotated_image` | Propagated from input |
+| `alert_group` | Propagated from input |
+| `alert_stmp` | Propagated from input |
 | `alert_suppressed` | Alert suppression flag (int64) |
 
 ### Initialization
