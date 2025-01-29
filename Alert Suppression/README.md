@@ -16,7 +16,7 @@ Schema for `USE_EXTERNAL_CACHE==1`:
 <img alt="Decision logic with an external cache" src="img/window_logic_with_cache.png"  width="60%" height="60%">
 
 > [!NOTE]
-> Cache retrieval and update operations are not part of the Alert Suppression custom window. These tasks are assumed to be performed by SAS Event Stream Processing StateDB Reader and StateDB Writer windows. See the example with Redis cache for details.  <-- ADD LINK --> 
+> Cache retrieval and update operations are not part of the Alert Suppression custom window. These tasks are assumed to be performed by SAS Event Stream Processing StateDB Reader and StateDB Writer windows. See the [example with Redis cache](./test_files/alerts_suppression_redisV1.xml) for details. 
   
 ## Mode Comparison
 
