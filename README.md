@@ -21,6 +21,7 @@ SAS Event Stream Processing Studio version 2025.02 or later is required.
 
 * [Getting Started](https://github.com/sassoftware/esp-studio-custom-windows/tree/main/Getting%20Started) provides a step-by-step example of how to create a custom window
 * [Upload a Configuration File](https://documentation.sas.com/?cdcId=espcdc&cdcVersion=default&docsetId=espstudio&docsetTarget=n1s1yakz9sl8upn1h9w2w7ba2mao.htm#p0a64jblkf46y4n1hofcs1ikonrz) in SAS Help Center explains how to upload a custom window configuration file (a Python or Lua code file) that you have obtained from this GitHub to SAS Event Stream Processing Studio
+* [Introduction video](https://sas-social.brightcovegallery.com/sharing?videoId=6369145381112) provides a quick introduction to custom windows
 
 <!-- ### Running -->
 
