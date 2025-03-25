@@ -23,7 +23,7 @@ When adding your contribution using a Pull Request, you will be asked the follow
    in your README file.
 3. Confirm your contribution does not include any encryption or other export-controlled technology.  
 
-## Guidelines for contributions
+## Guidelines for contributions from SAS staff
 
 * Test your custom window before contributing the window to this repository. 
 * Add your contribution as a separate subfolder to this repository. 
