@@ -28,6 +28,7 @@ When adding your contribution using a Pull Request, you will be asked the follow
 * Test your custom window before contributing the window to this repository. 
 * Add your contribution as a separate subfolder to this repository. 
 * Create a README.md file describing how to use the custom window and send it to our documentation expert Katja McLauglin to approve.
-  * The formal process is to create a "Review <custom_window_name> Custom Window README.md" ESPSTUDIO story ticket and assign it to Katja to look at     
+  * The formal process is to create a "Review <custom_window_name> Custom Window README.md" ESPSTUDIO story ticket and assign it to Katja to look at
+* Update [CUSTOM_WINDOWS_LIST](CUSTOM_WINDOWS_LIST.md) file with your newly added window so users can easily find it.
 
 <!-- Detailed steps of how to contribute -->
