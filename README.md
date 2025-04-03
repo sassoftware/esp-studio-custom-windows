@@ -37,5 +37,5 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on submitting contrib
 This project is licensed under the [Apache 2.0 License](LICENSE).
 
 ## Additional Resources
+* [How to use Custom Windows in SAS Event Stream Processing Studio Demo](https://sas-social.brightcovegallery.com/sharing?videoId=6369145381112)
 * [Working with Custom Windows](https://documentation.sas.com/?cdcId=espcdc&cdcVersion=default&docsetId=espstudio&docsetTarget=n1i5e4tlvgim7tn1sk4k9vafj2in.htm) in SAS Help Center
-* Demo video (TBD)
