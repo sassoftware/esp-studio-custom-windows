@@ -1,5 +1,5 @@
 # Getting Started
-This example demonstrates how a developer can create a simple custom window that takes two numbers as input and multiplies them. You also learn how an end user can use the custom window in a project and update the custom window after a developer has made further changes to the window' configuration. 
+This example demonstrates how a developer can create a simple custom window that takes two numbers as input and applies the selected mathematical operation to them. You also learn how an end user can use the custom window in a project and update the custom window after a developer has made further changes to the window's configuration. 
 
 ## Create a Custom Window in SAS Event Stream Processing Studio
 
@@ -29,13 +29,13 @@ For more information, see [Using Python Windows](https://go.documentation.sas.co
 In this example, input parameters are expanded, so  `expand_parms` is selected. 
 
 #### Input Variables
-This example uses two input variables. These numbers are the input for the multiplication. Descriptions are added so that the end user knows what to enter. 
+This example uses two input variables. These numbers are the input for the mathematical operation. Descriptions are added so that the end user knows what to enter. 
 
 #### Output Variables
-This example uses one output variable to store the result of the multiplication. 
+This example uses two output variables. One is the mathematical operator and the other is the result of applying the operator to the input numbers.
 
 #### Initialization
-In this example, the **Initialization** tab is left empty. However, this tab can be used to specify certain properties before events are delivered. For example, you could enable the user to specify the mathematical operation here to create a more generic window. 
+In this example, the **Initialization** tab contains an operator field which a dropdown list populated with the 4 supported mathematical operations: addition, subtraction, multiplication and division. The default selected operation is multiplication.
 
 ### Page 3 - Code
 The **Code** page is used to define the Python or Lua code that runs in the custom window. In this example, Python is used. The `create` function specifies the code. `number_1` and `number_2` are the arguments to this function because `expand_parms` was enabled on the **Settings** page of the wizard.
@@ -84,20 +84,22 @@ def publish():
 </window-source>
 ```
 
-3. To add the custom window to the project, in the **Windows** pane, expand **Custom** and drag the **Multiplication** custom window to the workspace. 
+3. To add the custom window to the project, in the **Windows** pane, expand **Custom** and drag the **Mathematical Operations** custom window to the workspace. 
 
     ![Windows pane](img/windows_custom.png)
 
-4. Connect the Source window to the Multiplication window. 
+4. Connect the Source window to the Mathematical_Operations window. 
 
 ### Edit the Output Schema
-1. View the output schema of the Multiplication window and click ![Import all schema fields](img/import_all_schema_fields.png) to import all schema fields.
-2. Click ![Edit fields](img/edit_fields.png) and add a field named `result` of type `int32`. 
+1. View the output schema of the Mathematical_Operations window and click ![Import all schema fields](img/import_all_schema_fields.png) to import all schema fields.
+2. Click ![Edit fields](img/edit_fields.png) and add the following two fields:
+ -  `result` of type `double`
+ -  `operator` of type `string`
 
 ![Output Schema window](img/output_schema.png)
 
 ### Edit Window Properties
-Edit the properties of the Multiplication window:
+Edit the properties of the Mathematical_Operations window:
 1. Expand **State** and set **Window state and index** to **Stateless (pi_EMPTY)**. 
 2. Expand **Mappings** and map the variables used internally by the custom window to the fields used in the project: 
 
@@ -110,7 +112,7 @@ Note that these variable names in the left column and the right column can be di
 ### Test the Project
 1. Save the project.
 2. Click **Enter Test Mode** and then click **Run Test**
-3. Check the output of the Multiplication window. 
+3. Check the output of the Mathematical_Operations window. 
 
 ![Test Mode](img/test_mode.png)
 
@@ -119,7 +121,7 @@ A developer might need to make a further change to an existing custom window. Fo
 
 ### Update the Custom Window's Configuration
 1. Return to the **Custom Window** page.
-2. Double-click the Multiplication custom window.
+2. Double-click the Mathematical Operations custom window.
 3. Make your changes. For example, go to the **Code** page and add `print(f"Output is {event['output_number']}")` to the code just before the `return` statement. 
 4. Click **New Version**.
 
