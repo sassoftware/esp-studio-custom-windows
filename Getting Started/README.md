@@ -105,6 +105,8 @@ Edit the properties of the Mathematical_Operations window:
 
 ![Mappings](img/mappings.png)
 
+![Initialization](img/initialization_mapping.png)
+
 A red asterisk means that a property is required. Hover over ![Information](img/info_icon.png) to see the description for that field. 
 
 Note that these variable names in the left column and the right column can be different. For example, `output_number` is used inside the custom window but is mapped to `result` in the project. 
