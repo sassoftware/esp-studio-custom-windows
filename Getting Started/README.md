@@ -93,8 +93,8 @@ def publish():
 ### Edit the Output Schema
 1. View the output schema of the Mathematical_Operations window and click ![Import all schema fields](img/import_all_schema_fields.png) to import all schema fields.
 2. Click ![Edit fields](img/edit_fields.png) and add the following two fields:
- -  `result` of type `double`
  -  `operator` of type `string`
+ -  `result` of type `double`
 
 ![Output Schema window](img/output_schema.png)
 
