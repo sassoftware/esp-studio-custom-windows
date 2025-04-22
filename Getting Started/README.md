@@ -35,7 +35,7 @@ This example uses two input variables. These numbers are the input for the mathe
 This example uses two output variables. One is the mathematical operator and the other is the result of applying the operator to the input numbers.
 
 #### Initialization
-In this example, the **Initialization** tab contains an operator field which a dropdown list populated with the 4 supported mathematical operations: addition, subtraction, multiplication and division. The default selected operation is multiplication.
+In this example, the **Initialization** tab contains an operator field. This field is a drop-down list that is populated with the 4 supported mathematical operations: addition, subtraction, multiplication, and division. The default selected operation is multiplication.
 
 ### Page 3 - Code
 The **Code** page is used to define the Python or Lua code that runs in the custom window. In this example, Python is used. The `create` function specifies the code. `number_1` and `number_2` are the arguments to this function because `expand_parms` was enabled on the **Settings** page of the wizard.
