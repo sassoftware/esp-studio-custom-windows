@@ -104,7 +104,7 @@ end
                 <property name="USE_EXTERNAL_CACHE" description="Where to store the suppression period state. If set to 0, the state will be stored only in the Lua window. In this case, we do not support HA and autoscaling in K8ts for the project. If set to 1, the current state will come as the alert_group_stmp field from the input window, and the project will be stateless and autoscalable. The cache can be stored in any persistent storage, we recommend implementing the cache using Redis (see the project template)"><![CDATA[0]]></property>
                 <property name="OUTPUT_SUPPRESSED_EVENTS" description="Output suppressed events from the window (with alert_suppressed = 1  ) "><![CDATA[1]]></property>
                 <property name="LOG_SUPPRESSED_EVENTS" description="Output every suppressed events to the pod log"><![CDATA[1]]></property>
-                <property name="MIN_COUNT" description="Allowed minimum number of alerts in a given alert_group in the last COUNT_INTERVAL seconds.A value of '0' or no setting means that this mode is disabled."><![CDATA[2]]></property>
+                <property name="MIN_COUNT" description="Allowed minimum number of alerts in a given alert_group in the last COUNT_INTERVAL seconds.A value of '0' or no setting means that this mode is disabled."><![CDATA[0]]></property>
                 <property name="COUNT_INTERVAL" description="The number of seconds during which the number of alerts in the alert_group will be counted and compared to the MIN_COUNT. If it is less, the alert will be suppressed. A value of '0' or no setting means that this mode is disabled."><![CDATA[10]]></property>
               </properties>
             </initialization>
