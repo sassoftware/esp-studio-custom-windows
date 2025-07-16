@@ -66,9 +66,9 @@ The following table describes the structure of the log file.
 | Name            | Description            |
 |:----------------|:-----------------------|
 | `LOGGER_id` | The internal log row sequence number |
-| `LOGGER_received_timestamp` | The name of SAS Event Stream Processing input window |
-| `LOGGER_received_timestamp_str` | The system timestamp of file entry creation |
-| `LOGGER_window` | The system timestamp of when the file entry was created, in human-readable string format (`"%Y-%m-%d %H:%M:%S"`) |
+| `LOGGER_window` | The name of SAS Event Stream Processing input window |
+| `LOGGER_received_timestamp` | The system timestamp of file entry creation |
+| `LOGGER_received_timestamp_str` | The system timestamp of when the file entry was created, in human-readable string format (`"%Y-%m-%d %H:%M:%S"`) |
 | _event data fields_ | All input event field data, separated by commas  |
 
 If `LOG_TO_SEPARATE_FILES = 1`, the generated file has the name `<LOG_DIR>/<Window_name>_log.csv`. Otherwise, all events are written to `LOG_DIR/default_log.csv`.
