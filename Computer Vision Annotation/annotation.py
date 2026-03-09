@@ -20,6 +20,7 @@ MARGIN = 2
 LOGGING_CONTEXT = "DF.ESP.CUSTOM.CV_ANNOTATION"
 
 # Supported values
+SUPPORTED_PSEUDONYMIZATION = ["none", "black_bbox"]
 SUPPORTED_IMAGE_ENCODING = ["wide", "jpg", "png"]
 
 # Keep track of errors
@@ -48,12 +49,24 @@ def init(settings):
 
     Args:
         settings (dict): A dictionary containing configuration options.
+            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none` or `black_bbox`.
             - `input_image_encoding` (str): Specifies the input image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
+            - `output_image_encoding` (str): Specifies the output image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `object_label_separator` (str): Separator used for object labels. Cannot be an empty string.
+            - `skeleton` (str, optional): Skeleton definition for keypoints. Only required when using keypoints.
             - `kpts_labels` (str, optional): Keypoint labels. Only required when using keypoints.
+            - `show_keypoint_labels` (str, optional): Whether to show keypoint labels or not. Only required when using keypoints.
     """
     global SETTINGS
     global error
+
+    if settings["pseudonymization"] not in SUPPORTED_PSEUDONYMIZATION:
+        esp.logMessage(
+            logcontext=LOGGING_CONTEXT,
+            message=f"Pseudonymization setting `{settings['pseudonymization']}` is not supported. Must be either {','.join(SUPPORTED_PSEUDONYMIZATION)}",
+            level="fatal",
+        )
+        error = True
 
     if settings["input_image_encoding"] not in SUPPORTED_IMAGE_ENCODING:
         esp.logMessage(
@@ -89,7 +102,12 @@ def init(settings):
     if not error:
         esp.logMessage(
             logcontext=LOGGING_CONTEXT,
-            message=f"Using `{settings['input_image_encoding']}` (input) and `{settings['output_image_encoding']}` (output) image encoding and `{settings['object_label_separator']}` as object label separator",
+            message=f"Using `{settings['pseudonymization']}` pseudonymization setting",
+            level="info",
+        )
+        esp.logMessage(
+            logcontext=LOGGING_CONTEXT,
+            message=f"Using `{settings['input_image_encoding']}` (input) and `{settings['output_image_encoding']}` (output) image encoding",
             level="info",
         )
         if settings["kpts_labels"] != "":
@@ -174,7 +192,19 @@ def annotate(data, opencv_image):
         - Optionally calls `annotate_keypoints` to add keypoint annotations if keypoint data is provided.
     """
 
-    image = annotate_object_detection(
+    if SETTINGS["pseudonymization"] == "black_bbox":
+        if data["x"] is not None:
+            for i in range(len(data["x"])):
+                start_point = (int(data["x"][i]), int(data["y"][i]))
+                end_point = (
+                    int(data["x"][i] + data["w"][i]),
+                    int(data["y"][i] + data["h"][i]),
+                )
+                cv2.rectangle(
+                    opencv_image, start_point, end_point, (0, 0, 0), -1, cv2.LINE_AA
+                )
+
+    opencv_image = annotate_object_detection(
         opencv_image,
         data["label"],
         data["x"],
@@ -187,8 +217,8 @@ def annotate(data, opencv_image):
     )
 
     if "object_track_kpts_x" in data and data["x"] is not None:
-        image = annotate_keypoints(
-            image,
+        opencv_image = annotate_keypoints(
+            opencv_image,
             len(data["x"]),
             None if "object_id" not in data else data["object_id"],
             None if "object_track_count" not in data else data["object_track_count"],
@@ -198,11 +228,23 @@ def annotate(data, opencv_image):
             data["object_track_kpts_score"],
             data["object_track_kpts_label_id"],
         )
-    return image
+    return opencv_image
+
+
+def pseudonymize_black_bbox(data, opencv_image):
+    """Pseudonymizes the given OpenCV image by drawing black bounding boxes over specified regions."""
+    for i in range(len(data["x"])):
+        start_point = (int(data["x"][i]), int(data["y"][i]))
+        end_point = (
+            int(data["x"][i] + data["w"][i]),
+            int(data["y"][i] + data["h"][i]),
+        )
+        cv2.rectangle(opencv_image, start_point, end_point, (0, 0, 0), -1, cv2.LINE_AA)
+    return opencv_image
 
 
 def annotate_object_detection(
-    image, label, x, y, w, h, score, object_id=None, attrs=None
+    opencv_image, label, x, y, w, h, score, object_id=None, attrs=None
 ):
     """Annotates an OpenCV image with bounding boxes, labels, and confidence scores for object detection.
 
@@ -210,7 +252,7 @@ def annotate_object_detection(
     confidence scores, and overlays the corresponding label for each object.
 
     Args:
-        image (numpy.ndarray): The input image in OpenCV format to be annotated.
+        opencv_image (numpy.ndarray): The input image in OpenCV format to be annotated.
         label (str): A string containing object labels separated by the configured separator.
         x (list[float]): List of x-coordinates for the top-left corners of bounding boxes.
         y (list[float]): List of y-coordinates for the top-left corners of bounding boxes.
@@ -224,7 +266,7 @@ def annotate_object_detection(
         numpy.ndarray: The annotated OpenCV image.
     """
     if x is None:  # return if no objects have been detected
-        return image
+        return opencv_image
 
     for i in range(len(x)):  # pylint: disable=consider-using-enumerate
         start_point = (int(x[i]), int(y[i]))
@@ -243,19 +285,19 @@ def annotate_object_detection(
         if object_id is not None:
             color = get_color(int(object_id[i]) - 1)
         else:
-            color = SAS_BLUE
-        image = draw_bbox(image, start_point, end_point, text, color)
-    return image
+            color = get_color(0)
+        opencv_image = draw_bbox(opencv_image, start_point, end_point, text, color)
+    return opencv_image
 
 
-def draw_bbox(image, start_point, end_point, text, color):
+def draw_bbox(opencv_image, start_point, end_point, text, color):
     """Draws a bounding box with a label on an image.
 
     This function draws a rectangle around the specified region of an image and overlays
     a label with text above the bounding box.
 
     Args:
-        image (numpy.ndarray): The input image in OpenCV format.
+        opencv_image (numpy.ndarray): The input image in OpenCV format.
         start_point (tuple[int, int]): Coordinates (x, y) of the top-left corner of the bounding box.
         end_point (tuple[int, int]): Coordinates (x, y) of the bottom-right corner of the bounding box.
         text (str): The label text to be displayed above the bounding box.
@@ -271,7 +313,7 @@ def draw_bbox(image, start_point, end_point, text, color):
     """
 
     cv2.rectangle(
-        image, start_point, end_point, color, 1, cv2.LINE_AA
+        opencv_image, start_point, end_point, color, 1, cv2.LINE_AA
     )  # Draw bounding box
 
     # Use white text if the background is dark, and vice versa
@@ -291,7 +333,7 @@ def draw_bbox(image, start_point, end_point, text, color):
 
     # Draw a filled rectangle to place the text in
     cv2.rectangle(
-        image,
+        opencv_image,
         (text_x - MARGIN, text_y + line_height + MARGIN),
         (text_x + text_width + MARGIN, text_y - text_height - MARGIN),
         color,
@@ -301,7 +343,7 @@ def draw_bbox(image, start_point, end_point, text, color):
 
     # Add the text
     cv2.putText(
-        image,
+        opencv_image,
         text,
         (text_x, text_y),
         FONT_FACE,
@@ -310,11 +352,11 @@ def draw_bbox(image, start_point, end_point, text, color):
         THICKNESS,
         cv2.LINE_AA,
     )
-    return image
+    return opencv_image
 
 
 def annotate_keypoints(
-    image,
+    opencv_image,
     n_objects,
     object_ids,
     object_track_count,
@@ -330,7 +372,7 @@ def annotate_keypoints(
     text label. Only the last position of the keypoint track is drawn.
 
     Args:
-        image (np.ndarray): The input image in OpenCV format to be annotated.
+        opencv_image (np.ndarray): The input image in OpenCV format to be annotated.
         n_objects (int): The number of objects to annotate.
         object_ids (list[int] | None): List of unique object IDs. If `None`, no object IDs are used.
         object_track_count (list[int] | None): List of the number of tracks per object.
@@ -375,25 +417,70 @@ def annotate_keypoints(
         # for t in range(number_of_tracks_object):
         # Plot last keypoints in track
         for t in [number_of_tracks_object - 1]:
+
+            # Lines
+            if SETTINGS["skeleton"] != "":
+                for skeleton_pair in SETTINGS["skeleton"].split(","):
+                    try:
+                        sk_from = skeleton_pair.split("-")[0]
+                        sk_to = skeleton_pair.split("-")[1]
+                        sk_from_id = SETTINGS["kpts_labels"].split(",").index(sk_from)
+                        sk_to_id = SETTINGS["kpts_labels"].split(",").index(sk_to)
+
+                        pos_a = label_id[t].index(sk_from_id)
+                        pos_b = label_id[t].index(sk_to_id)
+
+                        start_point = (int(kpts_x[t][pos_a]), int(kpts_y[t][pos_a]))
+                        end_point = (int(kpts_x[t][pos_b]), int(kpts_y[t][pos_b]))
+                        opencv_image = cv2.line(
+                            opencv_image,
+                            start_point,
+                            end_point,
+                            get_color(object_id - 1),
+                            1,
+                            cv2.LINE_AA,
+                        )
+                    except ValueError:
+                        pass
+
             for k in range(len(kpts_x[t])):
-                cv2.circle(
-                    image,
-                    (int(kpts_x[t][k]), int(kpts_y[t][k])),
-                    3,
-                    get_color(object_id - 1),
-                    -1,
-                )
-                cv2.putText(
-                    image,
-                    SETTINGS["kpts_labels"].split(",")[label_id[t][k]],
-                    (int(kpts_x[t][k]), int(kpts_y[t][k])),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.5,
-                    (255, 255, 255),
-                    1,
-                    cv2.LINE_AA,
-                )
-    return image
+                if SETTINGS["kpts_labels"] != "":
+                    label_name = SETTINGS["kpts_labels"].split(",")[label_id[t][k]]
+                else:
+                    label_name = ""
+
+                # Use rectangle for right body parts and circle for left body parts
+                if label_name.startswith("r_") or label_name.startswith("right_"):
+                    cv2.rectangle(
+                        opencv_image,
+                        (int(kpts_x[t][k]) - 4, int(kpts_y[t][k]) - 4),
+                        (int(kpts_x[t][k]) + 4, int(kpts_y[t][k]) + 4),
+                        get_color(object_id - 1),
+                        -1,
+                        cv2.LINE_AA,
+                    )
+                else:
+                    cv2.circle(
+                        opencv_image,
+                        (int(kpts_x[t][k]), int(kpts_y[t][k])),
+                        4,
+                        get_color(object_id - 1),
+                        -1,
+                        cv2.LINE_AA,
+                    )
+
+                if SETTINGS["show_keypoint_labels"] == "yes":
+                    cv2.putText(
+                        opencv_image,
+                        label_name,
+                        (int(kpts_x[t][k]), int(kpts_y[t][k])),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 255, 255),
+                        1,
+                        cv2.LINE_AA,
+                    )
+    return opencv_image
 
 
 def get_color(object_id):
@@ -403,109 +490,147 @@ def get_color(object_id):
     ]  # Reverse the list to use BGR instead of RGB
 
 
-# ESP configuration
 _espconfig_ = {
-    "settings": {
-        "expand_parms": False,
-        "process_blocks": False,
-        "encode_binary": False,
-    },
     "inputVariables": {
-        "desc": "Fields related to image and object detection are required. Fields related to keypoints are optional. Object ID (for object tracking) and attributes are also optional.",
+        "desc": "Fields for image and object detection are required. Keypoints, object tracking, and attributes are optional.",
         "fields": [
             {
                 "name": "image",
                 "desc": "Input image (blob)",
+                "esp_type": "blob",
                 "optional": False,
             },
             {
                 "name": "label",
-                "desc": "Delimited list containing the class of the detected objects (string)",
+                "desc": "Delimited list containing the class of the detected objects (string or rstring)",
+                "esp_type": "any",
                 "optional": False,
             },
             {
                 "name": "x",
                 "desc": "Top left X-coordinates of the bounding boxes (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": False,
             },
             {
                 "name": "y",
-                "desc": "Top left Y-coordinates of the bounding boxes  (array(dbl))",
+                "desc": "Top left Y-coordinates of the bounding boxes (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": False,
             },
             {
                 "name": "w",
                 "desc": "Widths of the bounding boxes (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": False,
             },
             {
                 "name": "h",
                 "desc": "Heights of the bounding boxes (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": False,
             },
             {
                 "name": "score",
                 "desc": "Confidence scores array (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": False,
             },
             {
                 "name": "object_id",
-                "desc": "Tracked object ID, for example from the Object Tracker window (array(i32))",
+                "desc": "Unique object IDs from tracking, e.g., Object Tracker window (array(i32))",
+                "esp_type": "array(i64)",
                 "optional": True,
             },
             {
                 "name": "attribute",
-                "desc": "Delimited list containing the attribute(s) of the detected objects (string)",
+                "desc": "Delimited list of object attributes (string or rstring)",
+                "esp_type": "any",
                 "optional": True,
             },
             {
                 "name": "object_track_count",
                 "desc": "Number of tracks per detected object (array(i32))",
+                "esp_type": "array(i32)",
                 "optional": True,
             },
             {
                 "name": "object_track_kpts_count",
                 "desc": "Number of keypoints per detected object for the track (array(i32))",
+                "esp_type": "array(i32)",
                 "optional": True,
             },
             {
                 "name": "object_track_kpts_x",
                 "desc": "X-coordinates for the keypoints track (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": True,
             },
             {
                 "name": "object_track_kpts_y",
                 "desc": "Y-coordinates for the keypoints track (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": True,
             },
             {
                 "name": "object_track_kpts_score",
                 "desc": "Confidence scores for the keypoints track (array(dbl))",
+                "esp_type": "array(dbl)",
                 "optional": True,
             },
             {
                 "name": "object_track_kpts_label_id",
                 "desc": "Label IDs for the keypoints track (array(i32))",
+                "esp_type": "array(i32)",
+                "optional": True,
+            },
+            {
+                "name": "camera_id",
+                "desc": "Camera ID",
+                "esp_type": "string",
                 "optional": True,
             },
         ],
     },
     "outputVariables": {
-        "desc": "Add an output field, of type `blob`, to store the annotated image. If you use the same image as used in the input variables, the original image is overwritten with an annotated image.",
-        "fields": [{"name": "annotated_image", "desc": "Annotated image (blob)"}],
+        "desc": "Define an output field of type `blob` to store the annotated image. **Note:** If you use the same field name as your input image, the original will be overwritten.",
+        "fields": [
+            {
+                "name": "annotated_image",
+                "desc": "Annotated image (blob)",
+                "esp_type": "blob",
+            }
+        ],
+    },
+    "settings": {
+        "desc": "",
+        "expand_parms": False,
+        "process_blocks": False,
+        "encode_binary": False,
     },
     "initialization": {
-        "desc": "Set the options for the custom window. Note that either `png` or `jpg` is needed as the value for `output_image_encoding` to display images in Grafana.",
+        "desc": "Configure the custom window options. **Important:** Use `png` or `jpg` for `output_image_encoding` to display images in Grafana. Use `wide` for optimal performance when staying within ESP.",
         "fields": [
             {
                 "name": "input_image_encoding",
                 "desc": "Input image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "wide",
+                "input_type": "dropdown",
+                "values": ["wide", "jpg", "png"],
             },
             {
                 "name": "output_image_encoding",
                 "desc": "Output image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "jpg",
+                "input_type": "dropdown",
+                "values": ["wide", "jpg", "png"],
+            },
+            {
+                "name": "pseudonymization",
+                "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`",
+                "default": "none",
+                "input_type": "dropdown",
+                "values": ["none", "black_bbox"],
             },
             {
                 "name": "object_label_separator",
@@ -514,9 +639,20 @@ _espconfig_ = {
             },
             {
                 "name": "kpts_labels",
-                "desc": "Keypoint labels",
+                "desc": "Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...`",
                 "default": "",
-                # kpts_labels=nose,l_eye,r_eye,l_ear,r_ear,l_shoulder,r_shoulder,l_elbow,r_elbow,l_wrist,r_wrist,l_hip,r_hip,l_knee,r_knee,l_ankle,r_ankle for YOLOv7 Pose
+            },
+            {
+                "name": "skeleton",
+                "desc": "Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`",
+                "default": "",
+            },
+            {
+                "name": "show_keypoint_labels",
+                "desc": "Whether to show keypoint labels or not",
+                "default": "no",
+                "input_type": "dropdown",
+                "values": ["yes", "no"],
             },
         ],
     },

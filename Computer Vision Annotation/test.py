@@ -13,9 +13,14 @@ import pandas as pd
 import annotation
 
 annotation.SETTINGS = {
-    "image_encoding": "jpg",
+    "pseudonymization": "none",
+    "input_image_encoding": "wide",
+    "output_image_encoding": "jpg",
     "object_label_separator": ",",
     "kpts_labels": "nose,l_eye,r_eye,l_ear,r_ear,l_shoulder,r_shoulder,l_elbow,r_elbow,l_wrist,r_wrist,l_hip,r_hip,l_knee,r_knee,l_ankle,r_ankle",
+    # "kpts_labels": "",
+    "skeleton": "nose-l_eye,nose-r_eye,l_eye-r_eye,l_eye-l_ear,r_eye-r_ear,l_ear-l_shoulder,r_ear-r_shoulder,l_shoulder-r_shoulder,l_shoulder-l_elbow,l_shoulder-l_hip,r_shoulder-r_elbow,r_shoulder-r_hip,l_elbow-l_wrist,r_elbow-r_wrist,l_hip-r_hip,l_knee-l_hip,r_knee-r_hip,l_ankle-l_knee,r_ankle-r_knee",
+    "show_keypoint_labels": "no",
 }
 espconfig = annotation._espconfig_  # pylint: disable=protected-access
 
@@ -23,7 +28,7 @@ espconfig = annotation._espconfig_  # pylint: disable=protected-access
 class TestAnnotationCustomWindow(unittest.TestCase):
     """Parent class to test the custom window."""
 
-    def process_and_validate_frame(self, df):
+    def process_and_validate_frame(self, df, test_suffix=""):
         """Helper function to process and validate frames."""
         for _, data in df.iterrows():  # Loop over all rows of the DataFrame
             frame = base64_string_to_opencv(
@@ -33,7 +38,7 @@ class TestAnnotationCustomWindow(unittest.TestCase):
             annotated_frame = annotation.annotate(
                 data, frame
             )  # Annotate the frame with the data - this is what the custom window does
-            write_frame(annotated_frame)  # Write the output to disk
+            write_frame(annotated_frame, test_suffix)  # Write the output to disk
             height, width = annotated_frame.shape[:2]
             self.assertGreater(height, 0, "Expected height > 0")
             self.assertGreater(width, 0, "Expected width > 0")
@@ -113,6 +118,52 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
         """Tests the annotation process for object keypoints and object ID."""
         df = self.df
         self.process_and_validate_frame(df)
+
+    def test_pseudonymization_options(self):
+        """Tests the annotation process with different pseudonymization options."""
+        pseudonymization_options = ["black_bbox", "none"]
+        original_setting = annotation.SETTINGS["pseudonymization"]
+
+        for option in pseudonymization_options:
+            with self.subTest(pseudonymization=option):
+                try:
+                    annotation.SETTINGS["pseudonymization"] = option
+                    df = self.df
+                    self.process_and_validate_frame(df, f"_{option}")
+                finally:
+                    annotation.SETTINGS["pseudonymization"] = original_setting
+
+    def test_keypoint_labels_options(self):
+        """Tests the annotation process with different keypoint label display options."""
+        keypoint_label_options = ["yes", "no"]
+        original_setting = annotation.SETTINGS["show_keypoint_labels"]
+
+        for option in keypoint_label_options:
+            with self.subTest(show_keypoint_labels=option):
+                try:
+                    annotation.SETTINGS["show_keypoint_labels"] = option
+                    df = self.df
+                    self.process_and_validate_frame(df, f"_kpts_{option}")
+                finally:
+                    annotation.SETTINGS["show_keypoint_labels"] = original_setting
+
+    def test_skeleton_options(self):
+        """Tests the annotation process with different skeleton options."""
+        skeleton_options = [
+            annotation.SETTINGS["skeleton"],
+            "",
+        ]
+        original_setting = annotation.SETTINGS["skeleton"]
+
+        for option in skeleton_options:
+            skeleton_label = "full" if option else "empty"
+            with self.subTest(skeleton=skeleton_label):
+                try:
+                    annotation.SETTINGS["skeleton"] = option
+                    df = self.df
+                    self.process_and_validate_frame(df, f"_skeleton_{skeleton_label}")
+                finally:
+                    annotation.SETTINGS["skeleton"] = original_setting
 
     def test_ot_no_keypoints(self):
         """Tests the annotation process without object keypoints, but with an object ID."""
@@ -200,9 +251,10 @@ class TestArrayRectPostprocessing(TestAnnotationCustomWindow):
 #         break
 
 
-def write_frame(frame):
+def write_frame(frame, test_suffix=""):
     """Write a frame to the test_output folder for manual testing."""
-    cv2.imwrite(f"test_output/{inspect.stack()[2][3]}.jpg", frame)
+    filename = f"{inspect.stack()[2][3]}{test_suffix}.jpg"
+    cv2.imwrite(f"test_output/{filename}", frame)
 
 
 def drop_unused_columns(df):
