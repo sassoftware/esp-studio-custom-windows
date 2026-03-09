@@ -44,7 +44,6 @@ Fields for image and object detection are required. Keypoints, object tracking, 
 | `object_track_kpts_y`        | Y-coordinates for the keypoints track                        | `array(dbl)`          | Optional               |
 | `object_track_kpts_score`    | Confidence scores for the keypoints track                    | `array(dbl)`          | Optional               |
 | `object_track_kpts_label_id` | Label IDs for the keypoints track                            | `array(i32)`          | Optional               |
-| `camera_id`                  | Camera ID                                                    | `string`              | Optional               |
 
 ### Output Variables
 Define an output field of type `blob` to store the annotated image. **Note:** If you use the same field name as your input image, the original will be overwritten.
