@@ -584,12 +584,12 @@ _espconfig_ = {
                 "esp_type": "array(i32)",
                 "optional": True,
             },
-            {
-                "name": "camera_id",
-                "desc": "Camera ID",
-                "esp_type": "string",
-                "optional": True,
-            },
+            # {
+            #     "name": "camera_id",
+            #     "desc": "Camera ID",
+            #     "esp_type": "string",
+            #     "optional": True,
+            # },
         ],
     },
     "outputVariables": {

@@ -10,6 +10,7 @@ import unittest
 import numpy as np
 import cv2
 import pandas as pd
+import re
 import annotation
 
 annotation.SETTINGS = {
@@ -23,6 +24,128 @@ annotation.SETTINGS = {
     "show_keypoint_labels": "no",
 }
 espconfig = annotation._espconfig_  # pylint: disable=protected-access
+
+
+class TestEspConfigValidation(unittest.TestCase):
+    """Test class to validate ESP configuration consistency."""
+
+    def _validate_config_fields_used_in_code(
+        self,
+        config_section,
+        field_name_generator,
+        pattern_generator,
+        error_formatter,
+        success_message_formatter,
+    ):
+        """Helper method to validate that ESP config fields are used in annotation.py code.
+
+        Args:
+            config_section (str): Section of espconfig to check ("inputVariables", "outputVariables", "initialization")
+            field_name_generator (callable): Function to extract field name from field dict
+            pattern_generator (callable): Function to generate regex patterns for a field name
+            error_formatter (callable): Function to format error details for unused fields
+            success_message_formatter (callable): Function to format success message
+        """
+        # Get fields from ESP config
+        fields = espconfig[config_section]["fields"]
+        field_names = [field_name_generator(field) for field in fields]
+
+        # Read the annotation.py source code
+        with open("annotation.py", "r", encoding="utf-8") as f:
+            source_code = f.read()
+
+        # Track unused fields
+        unused_fields = []
+
+        for field_name in field_names:
+            patterns = pattern_generator(field_name)
+
+            found = False
+            for pattern in patterns:
+                if re.search(pattern, source_code):
+                    found = True
+                    break
+
+            if not found:
+                unused_fields.append(field_name)
+
+        # Report results
+        if unused_fields:
+            field_details = []
+            for field_name in unused_fields:
+                field_info = next(
+                    field
+                    for field in fields
+                    if field_name_generator(field) == field_name
+                )
+                field_details.append(error_formatter(field_name, field_info))
+
+            failure_msg = (
+                f"The following {config_section} from ESP config are not used in annotation.py:\n"
+                + "\n".join(field_details)
+                + "\n\nConsider removing unused variables from the ESP config or implementing their usage."
+            )
+            self.fail(failure_msg)
+
+        # Success case - log how many fields were validated
+        print(success_message_formatter(len(field_names), config_section))
+
+    def test_all_input_variables_used_in_code(self):
+        """Test that all inputVariables from ESP config are referenced in annotation.py code."""
+        self._validate_config_fields_used_in_code(
+            config_section="inputVariables",
+            field_name_generator=lambda field: field["name"],
+            pattern_generator=lambda var_name: [
+                rf'data\["{var_name}"\]',
+                rf"data\['{var_name}'\]",
+                rf'"{var_name}"\s*in\s+data',
+                rf"'{var_name}'\s*in\s+data",
+            ],
+            error_formatter=lambda var_name, field_info: (
+                f"  - {var_name} ({'optional' if field_info.get('optional', False) else 'required'}): {field_info['desc']}"
+            ),
+            success_message_formatter=lambda count, section: (
+                f"\n✅ All {count} {section} are referenced in annotation.py code"
+            ),
+        )
+
+    def test_all_output_variables_used_in_code(self):
+        """Test that all outputVariables from ESP config are referenced in annotation.py code."""
+        self._validate_config_fields_used_in_code(
+            config_section="outputVariables",
+            field_name_generator=lambda field: field["name"],
+            pattern_generator=lambda var_name: [
+                rf'event\["{var_name}"\]\s*=',
+                rf"event\['{var_name}'\]\s*=",
+                rf'"{var_name}"\s*:',
+                rf"'{var_name}'\s*:",
+            ],
+            error_formatter=lambda var_name, field_info: (
+                f"  - {var_name}: {field_info['desc']}"
+            ),
+            success_message_formatter=lambda count, section: (
+                f"\n✅ All {count} {section} are referenced in annotation.py code"
+            ),
+        )
+
+    def test_all_settings_used_in_code(self):
+        """Test that all initialization settings from ESP config are referenced in annotation.py code."""
+        self._validate_config_fields_used_in_code(
+            config_section="initialization",
+            field_name_generator=lambda field: field["name"],
+            pattern_generator=lambda setting_name: [
+                rf'SETTINGS\["{setting_name}"\]',
+                rf"SETTINGS\['{setting_name}'\]",
+                rf'settings\["{setting_name}"\]',
+                rf"settings\['{setting_name}'\]",
+            ],
+            error_formatter=lambda setting_name, field_info: (
+                f"  - {setting_name} (default: {field_info.get('default', 'N/A')}): {field_info['desc']}"
+            ),
+            success_message_formatter=lambda count, section: (
+                f"\n✅ All {count} {section} settings are referenced in annotation.py code"
+            ),
+        )
 
 
 class TestAnnotationCustomWindow(unittest.TestCase):
