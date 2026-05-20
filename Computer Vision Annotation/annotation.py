@@ -583,13 +583,7 @@ _espconfig_ = {
                 "desc": "Label IDs for the keypoints track (array(i32))",
                 "esp_type": "array(i32)",
                 "optional": True,
-            },
-            # {
-            #     "name": "camera_id",
-            #     "desc": "Camera ID",
-            #     "esp_type": "string",
-            #     "optional": True,
-            # },
+            }
         ],
     },
     "outputVariables": {
