@@ -20,7 +20,7 @@ MARGIN = 2
 LOGGING_CONTEXT = "DF.ESP.CUSTOM.CV_ANNOTATION"
 
 # Supported values
-SUPPORTED_PSEUDONYMIZATION = ["none", "black_bbox"]
+SUPPORTED_PSEUDONYMIZATION = ["none", "black_bbox", "gaussian_blur"]
 SUPPORTED_IMAGE_ENCODING = ["wide", "jpg", "png"]
 
 # Keep track of errors
@@ -43,13 +43,19 @@ COLORS = [
     [3, 41, 84],  # Midnight Blue
 ]
 
+# Gaussian blur kernel size for pseudonymization.
+# A larger kernel results in stronger blurring, but also more computational cost.
+# The default value is set to 75 to provide strong blurring while maintaining performance.
+# For very small bounding boxes, the kernel size is automatically adjusted to ensure it is valid and effective.
+GAUSSIAN_BLUR_KERNEL_SIZE = 75
+
 
 def init(settings):
     """Initializes the global SETTINGS configuration and validates the provided settings.
 
     Args:
         settings (dict): A dictionary containing configuration options.
-            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none` or `black_bbox`.
+            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none`, `black_bbox`, or `gaussian_blur`.
             - `input_image_encoding` (str): Specifies the input image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `output_image_encoding` (str): Specifies the output image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `object_label_separator` (str): Separator used for object labels. Cannot be an empty string.
@@ -193,16 +199,9 @@ def annotate(data, opencv_image):
     """
 
     if SETTINGS["pseudonymization"] == "black_bbox":
-        if data["x"] is not None:
-            for i in range(len(data["x"])):
-                start_point = (int(data["x"][i]), int(data["y"][i]))
-                end_point = (
-                    int(data["x"][i] + data["w"][i]),
-                    int(data["y"][i] + data["h"][i]),
-                )
-                cv2.rectangle(
-                    opencv_image, start_point, end_point, (0, 0, 0), -1, cv2.LINE_AA
-                )
+        opencv_image = pseudonymize_black_bbox(data, opencv_image)
+    elif SETTINGS["pseudonymization"] == "gaussian_blur":
+        opencv_image = pseudonymize_gaussian_blur(data, opencv_image)
 
     opencv_image = annotate_object_detection(
         opencv_image,
@@ -233,6 +232,9 @@ def annotate(data, opencv_image):
 
 def pseudonymize_black_bbox(data, opencv_image):
     """Pseudonymizes the given OpenCV image by drawing black bounding boxes over specified regions."""
+    if data["x"] is None:
+        return opencv_image
+
     for i in range(len(data["x"])):
         start_point = (int(data["x"][i]), int(data["y"][i]))
         end_point = (
@@ -240,6 +242,41 @@ def pseudonymize_black_bbox(data, opencv_image):
             int(data["y"][i] + data["h"][i]),
         )
         cv2.rectangle(opencv_image, start_point, end_point, (0, 0, 0), -1, cv2.LINE_AA)
+    return opencv_image
+
+
+def pseudonymize_gaussian_blur(data, opencv_image):
+    """Pseudonymizes the given OpenCV image by blurring regions inside bounding boxes."""
+    if data["x"] is None:
+        return opencv_image
+
+    image_height, image_width = opencv_image.shape[:2]
+    for i in range(len(data["x"])):
+        x1 = max(0, int(data["x"][i]))
+        y1 = max(0, int(data["y"][i]))
+        x2 = min(image_width, int(data["x"][i] + data["w"][i]))
+        y2 = min(image_height, int(data["y"][i] + data["h"][i]))
+
+        if x2 <= x1 or y2 <= y1:
+            continue
+
+        roi = opencv_image[y1:y2, x1:x2]
+        min_dim = min(roi.shape[0], roi.shape[1])
+        if min_dim < 3:
+            continue
+
+        # Prefer a fixed strong blur while keeping kernel valid for tiny ROIs.
+        if min_dim < GAUSSIAN_BLUR_KERNEL_SIZE:
+            kernel_size = min_dim if min_dim % 2 == 1 else min_dim - 1
+            kernel_size = max(3, kernel_size)
+        else:
+            kernel_size = GAUSSIAN_BLUR_KERNEL_SIZE
+        opencv_image[y1:y2, x1:x2] = cv2.GaussianBlur(
+            roi,
+            (kernel_size, kernel_size),
+            0,
+        )
+
     return opencv_image
 
 
@@ -583,7 +620,7 @@ _espconfig_ = {
                 "desc": "Label IDs for the keypoints track (array(i32))",
                 "esp_type": "array(i32)",
                 "optional": True,
-            }
+            },
         ],
     },
     "outputVariables": {
@@ -621,10 +658,10 @@ _espconfig_ = {
             },
             {
                 "name": "pseudonymization",
-                "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`",
+                "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur`",
                 "default": "none",
                 "input_type": "dropdown",
-                "values": ["none", "black_bbox"],
+                "values": ["none", "black_bbox", "gaussian_blur"],
             },
             {
                 "name": "object_label_separator",

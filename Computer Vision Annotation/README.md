@@ -3,11 +3,11 @@
 This custom window annotates the output of object detection and pose estimation models for visualization in SAS Event Stream Processing. It renders:
 
 - **Bounding boxes** with class labels and confidence scores for detected objects
-- **Keypoints** as circles (left body parts) and rectangles (right body parts) connected by skeleton lines
+- **Keypoints** as circles (left body parts) and rectangles (right body parts) connected by skeleton lines. `kpts_labels` have to start with "r_" or "right_" for this to work. 
 - **Object tracking IDs** with unique colors when tracking data is available
 - **Attributes** for detected objects when provided
 
-**Privacy protection** is available through optional pseudonymization that fills bounding boxes with black rectangles.
+**Privacy protection** is available through optional pseudonymization, which either covers detected objects with black bounding boxes or applies a Gaussian blur to those regions. For pseudonymization to be effective, all relevant objects must be detected in every frame. In general, black bounding boxes provide stronger privacy protection than Gaussian blur. Use this script at your own risk.
 
 ## Installation
 
@@ -16,6 +16,10 @@ Upload the `annotation.py` configuration file to SAS Event Stream Processing Stu
 ## Example Output
 
 ![](img/skeleton.jpg)
+
+### Pseudonymization (gaussian_blur)
+
+![](img/gaussian_blur.jpg)
 
 ### Pseudonymization (black_bbox)
 

@@ -7,10 +7,10 @@ uses data from w_postprocess and w_object_tracker from this example: https://git
 import inspect
 import base64
 import unittest
+import re
 import numpy as np
 import cv2
 import pandas as pd
-import re
 import annotation
 
 annotation.SETTINGS = {
@@ -244,7 +244,7 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
 
     def test_pseudonymization_options(self):
         """Tests the annotation process with different pseudonymization options."""
-        pseudonymization_options = ["black_bbox", "none"]
+        pseudonymization_options = ["black_bbox", "none", "gaussian_blur"]
         original_setting = annotation.SETTINGS["pseudonymization"]
 
         for option in pseudonymization_options:
