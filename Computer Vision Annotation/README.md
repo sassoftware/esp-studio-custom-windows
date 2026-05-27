@@ -63,7 +63,7 @@ Configure the custom window options. **Important:** Use `png` or `jpg` for `outp
 |:-------------------------|:-----------------------------------------------------------------------------------------------|:----------|
 | `input_image_encoding`   | Input image encoding - must be one of the following: `wide`, `jpg`, `png`                      | `wide`    |
 | `output_image_encoding`  | Output image encoding - must be one of the following: `wide`, `jpg`, `png`                     | `jpg`     |
-| `pseudonymization`       | Pseudonymization setting - must be one of the following: `none`, `black_bbox`                  | `none`    |
+| `pseudonymization`       | Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur` | `none`    |
 | `object_label_separator` | Object label separator                                                                         | `,`       |
 | `kpts_labels`            | Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...` | ``        |
 | `skeleton`               | Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`                    | ``        |
