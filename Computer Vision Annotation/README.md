@@ -3,27 +3,32 @@
 This custom window annotates the output of object detection and pose estimation models for visualization in SAS Event Stream Processing. It renders:
 
 - **Bounding boxes** with class labels and confidence scores for detected objects
-- **Keypoints** as circles (left body parts) and rectangles (right body parts) connected by skeleton lines. `kpts_labels` have to start with "r_" or "right_" for this to work. 
+- **Keypoints** as circles for left-body parts and rectangles for right-body parts, connected by skeleton lines. kpts_labels must start with "r_" or "right_" for this to work.
 - **Object tracking IDs** with unique colors when tracking data is available
 - **Attributes** for detected objects when provided
 
-**Privacy protection** is available through optional pseudonymization, which either covers detected objects with black bounding boxes or applies a Gaussian blur to those regions. For pseudonymization to be effective, all relevant objects must be detected in every frame. In general, black bounding boxes provide stronger privacy protection than Gaussian blur. Use this script at your own risk.
+**Privacy protection** is available through optional pseudonymization. For pseudonymization to be effective, all relevant objects must be detected in every frame. In general, black bounding boxes provide stronger privacy protection than the other options. Gaussian blur produces visually cleaner results, but it is computationally heavier.
 
 ## Installation
 
 Upload the `annotation.py` configuration file to SAS Event Stream Processing Studio. For more information, see [Upload a Configuration File](https://documentation.sas.com/?cdcId=espcdc&cdcVersion=default&docsetId=espstudio&docsetTarget=n1s1yakz9sl8upn1h9w2w7ba2mao.htm#p0a64jblkf46y4n1hofcs1ikonrz) in SAS Help Center.
 
 ## Example Output
-
+### No pseudonymization
 ![](img/skeleton.jpg)
 
-### Pseudonymization (gaussian_blur)
-
+### Gaussian blur
 ![](img/gaussian_blur.jpg)
 
-### Pseudonymization (black_bbox)
+### Blur
+![](img/blur.jpg)
 
+### Pixelate
+![](img/pixelate.jpg)
+
+### Black bounding box
 ![](img/black_bbox.jpg)
+
 
 ## Usage
 
@@ -59,15 +64,15 @@ Define an output field of type `blob` to store the annotated image. **Note:** If
 ### Initialization
 Configure the custom window options. **Important:** Use `png` or `jpg` for `output_image_encoding` to display images in Grafana. Use `wide` for optimal performance when staying within ESP.
 
-| Name                     | Description                                                                                    | Default   |
-|:-------------------------|:-----------------------------------------------------------------------------------------------|:----------|
-| `input_image_encoding`   | Input image encoding - must be one of the following: `wide`, `jpg`, `png`                      | `wide`    |
-| `output_image_encoding`  | Output image encoding - must be one of the following: `wide`, `jpg`, `png`                     | `jpg`     |
-| `pseudonymization`       | Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur` | `none`    |
-| `object_label_separator` | Object label separator                                                                         | `,`       |
-| `kpts_labels`            | Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...` | ``        |
-| `skeleton`               | Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`                    | ``        |
-| `show_keypoint_labels`   | Whether to show keypoint labels or not                                                         | `no`      |
+| Name                     | Description                                                                                                        | Default   |
+|:-------------------------|:-------------------------------------------------------------------------------------------------------------------|:----------|
+| `input_image_encoding`   | Input image encoding - must be one of the following: `wide`, `jpg`, `png`                                          | `wide`    |
+| `output_image_encoding`  | Output image encoding - must be one of the following: `wide`, `jpg`, `png`                                         | `jpg`     |
+| `pseudonymization`       | Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur`, `blur`, `pixelate` | `none`    |
+| `object_label_separator` | Object label separator                                                                                             | `,`       |
+| `kpts_labels`            | Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...`                     | ``        |
+| `skeleton`               | Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`                                        | ``        |
+| `show_keypoint_labels`   | Whether to show keypoint labels or not                                                                             | `no`      |
 
 <!--end_of_usage-->
 
@@ -84,6 +89,15 @@ nose,l_eye,r_eye,l_ear,r_ear,l_shoulder,r_shoulder,l_elbow,r_elbow,l_wrist,r_wri
 ```
 nose-l_eye,nose-r_eye,l_eye-r_eye,l_eye-l_ear,r_eye-r_ear,l_ear-l_shoulder,r_ear-r_shoulder,l_shoulder-r_shoulder,l_shoulder-l_elbow,l_shoulder-l_hip,r_shoulder-r_elbow,r_shoulder-r_hip,l_elbow-l_wrist,r_elbow-r_wrist,l_hip-r_hip,l_knee-l_hip,r_knee-r_hip,l_ankle-l_knee,r_ankle-r_knee
 ```
+
+### Expected performance
+
+| Pseudonymization | Typical runtime for 1000 frames (s) | Relative cost |
+|:-----------------|------------------------------------:|:--------------|
+| `black_bbox`     | 0.088                               | Very low      |
+| `pixelate`       | 0.143                               | Low           |
+| `blur`           | 0.459                               | Low to medium |
+| `gaussian_blur`  | 12.597                              | High          |
 
 ## Development
 
@@ -124,6 +138,7 @@ The docstrings are formatted with `pydocstringformatter`.
 
 **Performance issues:**
 - Use `wide` encoding for fastest processing
+- Use a different method than `gaussian_blur` for pseudonymization
 - Consider reducing image resolution for real-time applications
 - Monitor memory usage with large images or high frame rates
 

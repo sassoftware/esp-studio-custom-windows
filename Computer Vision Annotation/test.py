@@ -6,6 +6,7 @@ uses data from w_postprocess and w_object_tracker from this example: https://git
 
 import inspect
 import base64
+import time
 import unittest
 import re
 import numpy as np
@@ -244,17 +245,40 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
 
     def test_pseudonymization_options(self):
         """Tests the annotation process with different pseudonymization options."""
-        pseudonymization_options = ["black_bbox", "none", "gaussian_blur"]
+        pseudonymization_options = annotation.SUPPORTED_PSEUDONYMIZATION
         original_setting = annotation.SETTINGS["pseudonymization"]
 
         for option in pseudonymization_options:
             with self.subTest(pseudonymization=option):
+                print(f"> Subtest: pseudonymization={option}")
                 try:
                     annotation.SETTINGS["pseudonymization"] = option
                     df = self.df
                     self.process_and_validate_frame(df, f"_{option}")
                 finally:
                     annotation.SETTINGS["pseudonymization"] = original_setting
+
+    def test_pseudonymization_options_performance(self):
+        """Tests the annotation performance with different pseudonymization options."""
+        data = self.df.loc[0]
+        frame = base64_string_to_opencv(
+            data["image"]
+        )  # base64 string of the DataFrame to an OpenCV frame
+
+        pseudonymization_funcs = [
+            ("black_bbox", annotation.pseudonymize_black_bbox),
+            ("gaussian_blur", annotation.pseudonymize_gaussian_blur),
+            ("blur", annotation.pseudonymize_blur),
+            ("pixelate", annotation.pseudonymize_pixelate),
+        ]
+        for option, func in pseudonymization_funcs:
+            with self.subTest(pseudonymization=option):
+                print(f"> Subtest: pseudonymization={option}")
+                start = time.perf_counter()
+                for _ in range(1000):
+                    func(data, frame)
+                elapsed = time.perf_counter() - start
+                print(f"1000x pseudonymization={option} elapsed={elapsed:.3f}s")
 
     def test_keypoint_labels_options(self):
         """Tests the annotation process with different keypoint label display options."""
@@ -263,6 +287,7 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
 
         for option in keypoint_label_options:
             with self.subTest(show_keypoint_labels=option):
+                print(f"> Subtest: show_keypoint_labels={option}")
                 try:
                     annotation.SETTINGS["show_keypoint_labels"] = option
                     df = self.df
@@ -281,6 +306,7 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
         for option in skeleton_options:
             skeleton_label = "full" if option else "empty"
             with self.subTest(skeleton=skeleton_label):
+                print(f"> Subtest: skeleton={skeleton_label}")
                 try:
                     annotation.SETTINGS["skeleton"] = option
                     df = self.df

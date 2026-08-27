@@ -20,7 +20,7 @@ MARGIN = 2
 LOGGING_CONTEXT = "DF.ESP.CUSTOM.CV_ANNOTATION"
 
 # Supported values
-SUPPORTED_PSEUDONYMIZATION = ["none", "black_bbox", "gaussian_blur"]
+SUPPORTED_PSEUDONYMIZATION = ["none", "black_bbox", "gaussian_blur", "blur", "pixelate"]
 SUPPORTED_IMAGE_ENCODING = ["wide", "jpg", "png"]
 
 # Keep track of errors
@@ -49,13 +49,19 @@ COLORS = [
 # For very small bounding boxes, the kernel size is automatically adjusted to ensure it is valid and effective.
 GAUSSIAN_BLUR_KERNEL_SIZE = 75
 
+# For a simple blur, use the same as a Gaussian blur
+BLUR_KERNEL_SIZE = 75
+
+# Pixelation strength
+PIXELATION_STRENGTH = 15
+
 
 def init(settings):
     """Initializes the global SETTINGS configuration and validates the provided settings.
 
     Args:
         settings (dict): A dictionary containing configuration options.
-            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none`, `black_bbox`, or `gaussian_blur`.
+            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none`, `black_bbox`, `gaussian_blur`, `blur`, or `pixelate`.
             - `input_image_encoding` (str): Specifies the input image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `output_image_encoding` (str): Specifies the output image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `object_label_separator` (str): Separator used for object labels. Cannot be an empty string.
@@ -202,6 +208,10 @@ def annotate(data, opencv_image):
         opencv_image = pseudonymize_black_bbox(data, opencv_image)
     elif SETTINGS["pseudonymization"] == "gaussian_blur":
         opencv_image = pseudonymize_gaussian_blur(data, opencv_image)
+    elif SETTINGS["pseudonymization"] == "blur":
+        opencv_image = pseudonymize_blur(data, opencv_image)
+    elif SETTINGS["pseudonymization"] == "pixelate":
+        opencv_image = pseudonymize_pixelate(data, opencv_image)
 
     opencv_image = annotate_object_detection(
         opencv_image,
@@ -245,6 +255,27 @@ def pseudonymize_black_bbox(data, opencv_image):
     return opencv_image
 
 
+def pseudonymize_pixelate(data, opencv_image):
+    """Pseudonymizes the given OpenCV image by pixelating regions inside bounding boxes."""
+    if data["x"] is None:
+        return opencv_image
+
+    for i in range(len(data["x"])):
+        x = int(data["x"][i])
+        y = int(data["y"][i])
+        w = int(data["w"][i])
+        h = int(data["h"][i])
+
+        roi = opencv_image[y : y + h, x : x + w]
+
+        small_w = max(1, w // PIXELATION_STRENGTH)
+        small_h = max(1, h // PIXELATION_STRENGTH)
+        small = cv2.resize(roi, (small_w, small_h), interpolation=cv2.INTER_LINEAR)
+        pixelated = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
+        opencv_image[y : y + h, x : x + w] = pixelated
+    return opencv_image
+
+
 def pseudonymize_gaussian_blur(data, opencv_image):
     """Pseudonymizes the given OpenCV image by blurring regions inside bounding boxes."""
     if data["x"] is None:
@@ -276,6 +307,37 @@ def pseudonymize_gaussian_blur(data, opencv_image):
             (kernel_size, kernel_size),
             0,
         )
+
+    return opencv_image
+
+
+def pseudonymize_blur(data, opencv_image):
+    """Pseudonymizes the given OpenCV image by blurring regions inside bounding boxes."""
+    if data["x"] is None:
+        return opencv_image
+
+    image_height, image_width = opencv_image.shape[:2]
+    for i in range(len(data["x"])):
+        x1 = max(0, int(data["x"][i]))
+        y1 = max(0, int(data["y"][i]))
+        x2 = min(image_width, int(data["x"][i] + data["w"][i]))
+        y2 = min(image_height, int(data["y"][i] + data["h"][i]))
+
+        if x2 <= x1 or y2 <= y1:
+            continue
+
+        roi = opencv_image[y1:y2, x1:x2]
+        min_dim = min(roi.shape[0], roi.shape[1])
+        if min_dim < 3:
+            continue
+
+        # Prefer a fixed strong blur while keeping kernel valid for tiny ROIs.
+        if min_dim < BLUR_KERNEL_SIZE:
+            kernel_size = min_dim if min_dim % 2 == 1 else min_dim - 1
+            kernel_size = max(3, kernel_size)
+        else:
+            kernel_size = BLUR_KERNEL_SIZE
+        opencv_image[y1:y2, x1:x2] = cv2.boxFilter(roi, -1, (kernel_size, kernel_size))
 
     return opencv_image
 
@@ -658,10 +720,10 @@ _espconfig_ = {
             },
             {
                 "name": "pseudonymization",
-                "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur`",
+                "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur`, `blur`, `pixelate`",
                 "default": "none",
                 "input_type": "dropdown",
-                "values": ["none", "black_bbox", "gaussian_blur"],
+                "values": ["none", "black_bbox", "gaussian_blur", "blur", "pixelate"],
             },
             {
                 "name": "object_label_separator",
