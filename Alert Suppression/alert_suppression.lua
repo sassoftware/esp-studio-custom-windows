@@ -6,7 +6,7 @@ local first_event_flag = 1
 local stmpFieldName
 
 -- Logging context name
-local LOGGING_CONTEXT = "DF.ESP.CUSTOM.CV_ANNOTATION"
+local LOGGING_CONTEXT = "DF.ESP.CUSTOM.ALERT_SUPPRESSION"
 
 -- Initialization function
 function init(settings)
