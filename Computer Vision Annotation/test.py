@@ -26,6 +26,13 @@ annotation.SETTINGS = {
 }
 espconfig = annotation._espconfig_  # pylint: disable=protected-access
 
+PSEUDONYMIZATION_FUNCS = [
+    ("black_bbox", annotation.pseudonymize_black_bbox),
+    ("gaussian_blur", annotation.pseudonymize_gaussian_blur),
+    ("blur", annotation.pseudonymize_blur),
+    ("pixelate", annotation.pseudonymize_pixelate),
+]
+
 
 class TestEspConfigValidation(unittest.TestCase):
     """Test class to validate ESP configuration consistency."""
@@ -265,13 +272,7 @@ class TestArrayRectObjectTracker(TestAnnotationCustomWindow):
             data["image"]
         )  # base64 string of the DataFrame to an OpenCV frame
 
-        pseudonymization_funcs = [
-            ("black_bbox", annotation.pseudonymize_black_bbox),
-            ("gaussian_blur", annotation.pseudonymize_gaussian_blur),
-            ("blur", annotation.pseudonymize_blur),
-            ("pixelate", annotation.pseudonymize_pixelate),
-        ]
-        for option, func in pseudonymization_funcs:
+        for option, func in PSEUDONYMIZATION_FUNCS:
             with self.subTest(pseudonymization=option):
                 print(f"> Subtest: pseudonymization={option}")
                 start = time.perf_counter()
@@ -392,6 +393,27 @@ class TestArrayRectPostprocessing(TestAnnotationCustomWindow):
         """Tests the annotation process without keypoints (just object detections)."""
         df = self.df.drop(["object_track_kpts_x"], axis=1)
         self.process_and_validate_frame(df)
+
+
+class TestSinglePicture(unittest.TestCase):
+    """Unit test class for pseudonymizing a single image file."""
+
+    def test_single_picture_pseudonymization(self):
+        """Tests every pseudonymization option, using one box covering the whole image."""
+        for option, func in PSEUDONYMIZATION_FUNCS:
+            with self.subTest(pseudonymization=option):
+                print(f"> Subtest: pseudonymization={option}")
+                # Re-read the image because the functions modify it in place
+                img = cv2.imread("test_files/person.jpg")
+                if img is None:
+                    self.skipTest("test_files/person.jpg not available")
+
+                height, width = img.shape[:2]
+                data = {"x": [0], "y": [0], "w": [width], "h": [height]}
+
+                result = func(data, img)
+                self.assertEqual(result.shape, (height, width, 3))
+                cv2.imwrite(f"test_output/test_single_picture_{option}.jpg", result)
 
 
 # def show_frame(frame):

@@ -52,8 +52,12 @@ GAUSSIAN_BLUR_KERNEL_SIZE = 75
 # For a simple blur, use the same as a Gaussian blur
 BLUR_KERNEL_SIZE = 75
 
-# Pixelation strength
-PIXELATION_STRENGTH = 15
+# Pixelation strength: the resolution inside a bounding box is reduced at least by this factor
+PIXELATION_STRENGTH = 5
+
+# Maximum number of mosaic blocks (pixels of the downscaled image) per bounding box.
+# Larger boxes get larger blocks, keeping the bounding box aspect ratio.
+PIXELATION_MAX_BLOCKS = 100
 
 
 def init(settings):
@@ -61,7 +65,7 @@ def init(settings):
 
     Args:
         settings (dict): A dictionary containing configuration options.
-            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none`, `black_bbox`, `gaussian_blur`, `blur`, or `pixelate`.
+            - `pseudonymization` (str): Pseudonymization setting. Must be one of `none`, `black_bbox`, `gaussian_blur`, `blur`, `pixelate`.
             - `input_image_encoding` (str): Specifies the input image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `output_image_encoding` (str): Specifies the output image encoding format. Must be in `SUPPORTED_IMAGE_ENCODING`.
             - `object_label_separator` (str): Separator used for object labels. Cannot be an empty string.
@@ -256,23 +260,45 @@ def pseudonymize_black_bbox(data, opencv_image):
 
 
 def pseudonymize_pixelate(data, opencv_image):
-    """Pseudonymizes the given OpenCV image by pixelating regions inside bounding boxes."""
+    """Pseudonymizes the given OpenCV image by pixelating regions inside bounding boxes.
+
+    The resolution is reduced at least by `PIXELATION_STRENGTH`, and further if
+    needed to stay within `PIXELATION_MAX_BLOCKS` blocks per bounding box.
+    """
     if data["x"] is None:
         return opencv_image
 
+    image_height, image_width = opencv_image.shape[:2]
     for i in range(len(data["x"])):
-        x = int(data["x"][i])
-        y = int(data["y"][i])
-        w = int(data["w"][i])
-        h = int(data["h"][i])
+        x1 = max(0, int(data["x"][i]))
+        y1 = max(0, int(data["y"][i]))
+        x2 = min(image_width, int(data["x"][i] + data["w"][i]))
+        y2 = min(image_height, int(data["y"][i] + data["h"][i]))
 
-        roi = opencv_image[y : y + h, x : x + w]
+        if x2 <= x1 or y2 <= y1:
+            continue
+
+        w = x2 - x1
+        h = y2 - y1
+        roi = opencv_image[y1:y2, x1:x2]
 
         small_w = max(1, w // PIXELATION_STRENGTH)
         small_h = max(1, h // PIXELATION_STRENGTH)
+
+        # Shrink the grid further when the box is large, keeping its aspect ratio.
+        if small_w * small_h > PIXELATION_MAX_BLOCKS:
+            scale = (PIXELATION_MAX_BLOCKS / (small_w * small_h)) ** 0.5
+            small_w = max(1, int(small_w * scale))
+            small_h = max(1, int(small_h * scale))
+            while small_w * small_h > PIXELATION_MAX_BLOCKS:
+                if small_w >= small_h:
+                    small_w -= 1
+                else:
+                    small_h -= 1
+
         small = cv2.resize(roi, (small_w, small_h), interpolation=cv2.INTER_LINEAR)
         pixelated = cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)
-        opencv_image[y : y + h, x : x + w] = pixelated
+        opencv_image[y1:y2, x1:x2] = pixelated
     return opencv_image
 
 
