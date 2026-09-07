@@ -616,168 +616,165 @@ def get_color(object_id):
 
 
 _espconfig_ = {
-    "inputVariables": {
-        "desc": "Fields for image and object detection are required. Keypoints, object tracking, and attributes are optional.",
-        "fields": [
+    "inputVariables" : {
+        "desc" : "Fields for image and object detection are required. Keypoints, object tracking, and attributes are optional.",
+        "fields" : [
             {
                 "name": "image",
                 "desc": "Input image (blob)",
                 "esp_type": "blob",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "label",
                 "desc": "Delimited list containing the class of the detected objects (string or rstring)",
                 "esp_type": "any",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "x",
                 "desc": "Top left X-coordinates of the bounding boxes (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "y",
                 "desc": "Top left Y-coordinates of the bounding boxes (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "w",
                 "desc": "Widths of the bounding boxes (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "h",
                 "desc": "Heights of the bounding boxes (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "score",
                 "desc": "Confidence scores array (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": False,
+                "optional": False
             },
             {
                 "name": "object_id",
                 "desc": "Unique object IDs from tracking, e.g., Object Tracker window (array(i32))",
                 "esp_type": "array(i64)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "attribute",
                 "desc": "Delimited list of object attributes (string or rstring)",
                 "esp_type": "any",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_count",
                 "desc": "Number of tracks per detected object (array(i32))",
                 "esp_type": "array(i32)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_kpts_count",
                 "desc": "Number of keypoints per detected object for the track (array(i32))",
                 "esp_type": "array(i32)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_kpts_x",
                 "desc": "X-coordinates for the keypoints track (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_kpts_y",
                 "desc": "Y-coordinates for the keypoints track (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_kpts_score",
                 "desc": "Confidence scores for the keypoints track (array(dbl))",
                 "esp_type": "array(dbl)",
-                "optional": True,
+                "optional": True
             },
             {
                 "name": "object_track_kpts_label_id",
                 "desc": "Label IDs for the keypoints track (array(i32))",
                 "esp_type": "array(i32)",
-                "optional": True,
-            },
-        ],
+                "optional": True
+            }
+        ]
     },
-    "outputVariables": {
-        "desc": "Define an output field of type `blob` to store the annotated image. **Note:** If you use the same field name as your input image, the original will be overwritten.",
-        "fields": [
+    "outputVariables" : {
+        "desc" : "Define an output field of type `blob` to store the annotated image. **Note:** If you use the same field name as your input image, the original will be overwritten.",
+        "fields" : [
             {
                 "name": "annotated_image",
                 "desc": "Annotated image (blob)",
-                "esp_type": "blob",
+                "esp_type": "blob"
             }
-        ],
+        ]
     },
-    "settings": {
-        "desc": "",
-        "expand_parms": False,
-        "process_blocks": False,
-        "encode_binary": False,
+    "settings" : {
+        "desc" : "",
+        "expand_parms" : False,
+        "process_blocks" : False,
+        "encode_binary" : False
     },
-    "initialization": {
-        "desc": "Configure the custom window options. **Important:** Use `png` or `jpg` for `output_image_encoding` to display images in Grafana. Use `wide` for optimal performance when staying within ESP.",
-        "fields": [
+    "initialization" : {
+        "desc" : "Configure the custom window options. **Important:** Use `png` or `jpg` for `output_image_encoding` to display images in Grafana. Use `wide` for optimal performance when staying within ESP.",
+        "fields" : [
             {
                 "name": "input_image_encoding",
                 "desc": "Input image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "wide",
                 "input_type": "dropdown",
-                "values": ["wide", "jpg", "png"],
+                "values": ["wide","jpg","png"]
             },
             {
                 "name": "output_image_encoding",
                 "desc": "Output image encoding - must be one of the following: `wide`, `jpg`, `png`",
                 "default": "jpg",
                 "input_type": "dropdown",
-                "values": ["wide", "jpg", "png"],
+                "values": ["wide","jpg","png"]
             },
             {
                 "name": "pseudonymization",
                 "desc": "Pseudonymization setting - must be one of the following: `none`, `black_bbox`, `gaussian_blur`, `blur`, `pixelate`",
                 "default": "none",
                 "input_type": "dropdown",
-                "values": ["none", "black_bbox", "gaussian_blur", "blur", "pixelate"],
+                "values": ["none","black_bbox","gaussian_blur","blur","pixelate"]
             },
             {
                 "name": "object_label_separator",
                 "desc": "Object label separator",
-                "default": ",",
+                "default": ","
             },
             {
                 "name": "kpts_labels",
-                "desc": "Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...`",
-                "default": "",
+                "desc": "Keypoint labels, comma separated, in the order of the label IDs. For example: `nose,l_eye,...`"
             },
             {
                 "name": "skeleton",
-                "desc": "Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`",
-                "default": "",
+                "desc": "Skeleton definition for keypoints. For example: `nose-l_eye,nose-r_eye,...`"
             },
             {
                 "name": "show_keypoint_labels",
                 "desc": "Whether to show keypoint labels or not",
                 "default": "no",
                 "input_type": "dropdown",
-                "values": ["yes", "no"],
-            },
-        ],
-    },
+                "values": ["yes","no"]
+            }
+        ]
+    }
 }
-"""metadata start
-
+'''metadata start
 {
     "name": "Computer Vision Annotation",
     "description": "Annotate the results of an object detection and/or a keypoint detection model.",
@@ -785,7 +782,18 @@ _espconfig_ = {
         "computer_vision",
         "python"
     ],
-    "versionNotes": "Initial version"
+    "versionNotes": "Initial version",
+    "libraries": [
+        {
+            "name": "opencv-python",
+            "operator": "~=",
+            "version": "4.8"
+        },
+        {
+            "name": "numpy",
+            "operator": ">=",
+            "version": "1.24"
+        }
+    ]
 }
-metadata end
-"""
+metadata end'''
